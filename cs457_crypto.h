@@ -1,0 +1,11 @@
+char* one_time_pad_encr(char*,int,char*);
+char* one_time_pad_decr(char*,int,char*);
+char* affine_encr(char*);
+char* affine_decr(char*);
+char* decryptor(char*);
+char* trithemius_encr(char*);
+char* trithemius_decr(char*);
+char* scytale_encr(char*,int);
+char* scytale_decr(char*,int);
+char* rail_fence_encr(char*,int);
+char* rail_fence_decr(char*,int);
