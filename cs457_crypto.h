@@ -10,3 +10,5 @@ char* scytale_decr(char*,int);
 char* rail_fence_encr(char*,int);
 char* rail_fence_decr(char*,int);
 int absol(int);
+void init_tabula_recta_upper();
+void init_tabula_recta_lower();

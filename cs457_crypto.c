@@ -11,6 +11,34 @@ static const char letters[] = { 'a','b','c','d','e','f','g','h','i','j',
 'k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
 };
 
+char tabula_recta_upper[26][26];
+
+char tabula_recta_lower[26][26];
+
+void init_tabula_recta_upper(){
+    int row,col,index;
+    char base;
+    for (row = 0; row < 26; row++) {
+        for (col = 0; col < 26; col++) {
+            base = 'A';
+            index = (row + col) % 26;
+            tabula_recta_upper[row][col] = base + index;
+        }
+    }
+}
+
+void init_tabula_recta_lower(){
+    int row,col,index;
+    char base;
+    for (row = 0; row < 26; row++) {
+        for (col = 0; col < 26; col++) {
+            base = 'a';
+            index = (row + col) % 26;
+            tabula_recta_lower[row][col] = base + index;
+        }
+    }
+}
+
 int absol(int num){
     if(num<0){
         return 26+num;
@@ -94,11 +122,55 @@ char* decryptor(char* ciphertext){
 }
 
 char* trithemius_encr(char* plaintext){
-
+    char* ciphertext;
+    int count=0,col=0;
+    while(plaintext[count]!='\n'){
+        count++;
+    }
+    ciphertext = (char*)malloc(count*sizeof(char));
+    count=0;
+    while(plaintext[count]!='\n'){
+        if((plaintext[count]>='A')&&(plaintext[count]<='Z')){
+            col = plaintext[count] - 'A';
+            ciphertext[count]=tabula_recta_upper[count][col];
+        }
+        else if((plaintext[count]>='a')&&(plaintext[count]<='z')){
+            col = plaintext[count] - 'a';
+            ciphertext[count]=tabula_recta_lower[count][col];
+        }
+        else{
+            ciphertext[count]=plaintext[count];
+        }
+        count++;
+    }
+    ciphertext[count]='\0';
+    return ciphertext;
 }
 
 char* trithemius_decr(char* ciphertext){
-
+    char* plaintext;
+    int count=0,col=0;
+    while(ciphertext[count]!='\0'){
+        count++;
+    }
+    plaintext = (char*)malloc(count*sizeof(char));
+    count=0;
+    while(ciphertext[count]!='\0'){
+        if((ciphertext[count]>='A')&&(ciphertext[count]<='Z')){
+            col = ciphertext[count] - 'A';
+            plaintext[count]=tabula_recta_upper[count-count*1][col-count];
+        }
+        else if((ciphertext[count]>='a')&&(ciphertext[count]<='z')){
+            col = ciphertext[count] - 'a';
+            plaintext[count]=tabula_recta_lower[count-count*1][absol(col-count)];
+        }
+        else{
+            plaintext[count]=ciphertext[count];
+        }
+        count++;
+    }
+    plaintext[count]='\0';
+    return plaintext;
 }
 
 char* scytale_encr(char* plaintext,int diameter){
@@ -123,7 +195,7 @@ int main(){
     int count=0,diameter,rails;
     puts("Please enter the text you want to encrypt!");
     fgets(plaintext,sizeof(plaintext),stdin);
-    /*Start of One Time Pad
+    /*//Start of One Time Pad
     while(plaintext[count]!='\n'){
         //use of /dev/urandom instead of rand
         key[count]=rand()%(126-32+1)+32; 
@@ -133,28 +205,30 @@ int main(){
     printf("Ciphertext for One Time Pad is: %s\n",ciphertext);
     decipheredtext=one_time_pad_decr(ciphertext,count,key);
     printf("Plaintext for One Time Pad is: %s\n",decipheredtext);
-    End of One Time Pad*/
+    //End of One Time Pad
 
     //Start of Affine Cipher
     ciphertext=affine_encr(plaintext);
     printf("Ciphertext for Affine Cipher is: %s\n",ciphertext);
     decipheredtext=affine_decr(ciphertext);
     printf("Plaintext for Affine Cipher is: %s\n",decipheredtext);
-    //End of Affine Cipher
+    //End of Affine Cipher*/
 
-    /*Start of Decryptor
+    /*//Start of Decryptor
     decipheredtext=decryptor(ciphertext);
     printf("Plaintext for Decryptor is: %s\n",decipheredtext);
-    //End of Decryptor
+    //End of Decryptor*/
 
     //Start of Trithemius Cipher
+    init_tabula_recta_upper();
+    init_tabula_recta_lower();
     ciphertext=trithemius_encr(plaintext);
     printf("Ciphertext for Trithemiys Cipher is: %s\n",ciphertext);
     decipheredtext=trithemius_decr(ciphertext);
     printf("Plaintext for Trithemius Cipher is: %s\n",decipheredtext);
     //End of Trithemius Cipher
 
-    //Start of Scytale Cipher
+    /*//Start of Scytale Cipher
     ciphertext=scytale_encr(plaintext,diameter);
     printf("Ciphertext for Scytale Cipher is: %s\n",ciphertext);
     decipheredtext=scytale_decr(ciphertext,diameter);
