@@ -296,7 +296,56 @@ char* rail_fence_encr(char* plaintext,int rails){
 }
 
 char* rail_fence_decr(char* ciphertext){
-
+    char* plaintext,*truetext;
+    int count=0,rails=0,length=0,col,row,temp,bottom=0;
+    while(ciphertext[count]!='\0'){
+        if(ciphertext[count]==' ') rails++;
+        count++;
+    }
+    length=count-rails;
+    plaintext=(char*)malloc((length)*sizeof(char));
+    truetext=(char*)malloc((length)*sizeof(char));
+    char rail_fence[rails][length];
+    for(row=0;row<rails;row++){
+        for(col=0;col<length;col++){
+            rail_fence[row][col]='0';
+        }
+    }
+    count=0;
+    temp=0;
+    while(ciphertext[count]!='\0'){
+        if(ciphertext[count]!=' '){
+            truetext[temp]=ciphertext[count];
+            temp++;
+        }
+        count++;
+    }
+    truetext[temp]='\0';
+    temp=0;
+    for(count=0;count<length;count++){
+        rail_fence[temp][count]='1';
+        if(temp==rails-1) bottom=1;
+        else if(!temp) bottom=0;
+        if(!bottom) temp++;
+        else temp--;
+    }
+    count=0;
+    for(row=0;row<rails;row++){
+        for(col=0;col<length;col++){
+            if(rail_fence[row][col]=='1') rail_fence[row][col]=truetext[count++];
+        }
+    }
+    temp=0;
+    bottom=0;
+    for(count=0;count<length;count++){
+        plaintext[count]=rail_fence[temp][count];
+        if(temp==rails-1) bottom=1;
+        else if(!temp) bottom=0;
+        if(!bottom) temp++;
+        else temp--;
+    }
+    plaintext[length]='\0';
+    return plaintext;
 }
 
 int main(){
