@@ -12,3 +12,4 @@ char* rail_fence_decr(char*);
 int absol(int);
 void init_tabula_recta_upper();
 void init_tabula_recta_lower();
+void init_hashtable();

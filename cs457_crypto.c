@@ -3,6 +3,8 @@
 #include <string.h>
 #include "cs457_crypto.h"
 
+#define HASH_SIZE 256
+
 static const char Letters[] = {'A','B','C','D','E','F','G','H','I','J','K', 
 'L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
 };
@@ -11,9 +13,18 @@ static const char letters[] = { 'a','b','c','d','e','f','g','h','i','j',
 'k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
 };
 
+char hashtable[HASH_SIZE];
+
 char tabula_recta_upper[26][26];
 
 char tabula_recta_lower[26][26];
+
+void init_hashtable(){
+    int count;
+    for(count=0;count<HASH_SIZE;count++){
+        hashtable[count]='0';
+    }
+}
 
 void init_tabula_recta_upper(){
     int row,col,index;
@@ -118,7 +129,12 @@ char* affine_decr(char* ciphertext){
 }
 
 char* decryptor(char* ciphertext){
-
+    char cipher,plain,word[30];
+    puts("Please enter the cipher letter and the letter you want to exchange!");
+    //scanf("%c %c",&cipher,&plain);
+    puts("Enter a semi decrypted word!");
+    fgets(word,sizeof(word),stdin);
+    printf("%s\n",word);
 }
 
 char* trithemius_encr(char* plaintext){
@@ -176,6 +192,7 @@ char* trithemius_decr(char* ciphertext){
 char* scytale_encr(char* plaintext,int diameter){
     char* ciphertext,*truetext;
     int count=0,row=0,col=0,length=0,temp=0;
+    init_hashtable();
     while(plaintext[count]!='\n'){
         if((plaintext[count]>='A'&&plaintext[count]<='Z')||(plaintext[count]>='a')&&(plaintext[count]<='z')){
             length++;
@@ -191,6 +208,9 @@ char* scytale_encr(char* plaintext,int diameter){
         if((plaintext[count]>='A'&&plaintext[count]<='Z')||(plaintext[count]>='a')&&(plaintext[count]<='z')){
             truetext[temp]=plaintext[count];
             temp++;
+        }
+        else{
+            hashtable[count]=plaintext[count];
         }
         count++;
     }
@@ -218,11 +238,16 @@ char* scytale_encr(char* plaintext,int diameter){
 
 char* scytale_decr(char* ciphertext,int diameter){
     char* plaintext;
-    int count=0,col=0,row=0,length;
+    int count=0,col=0,row=0,length,extrachars=0;
     while(ciphertext[count]!='\0'){
         count++;
     }
-    plaintext = (char*)malloc(count*sizeof(char));
+    for(length=0;length<HASH_SIZE;length++){
+        if(hashtable[length]!='0') {
+            extrachars++;
+        }
+    }
+    plaintext = (char*)malloc((count+extrachars)*sizeof(char));
     char papyrus[count/diameter][diameter];
     length=count;
     for(count=0;count<length;count++){
@@ -236,9 +261,19 @@ char* scytale_decr(char* ciphertext,int diameter){
     count=0;
     for(row=0;row<(length/diameter);row++){
         for(col=0;col<diameter;col++){   
-            plaintext[count]=papyrus[row][col];
+            if(hashtable[count]!='0'){
+                plaintext[count]=hashtable[count];
+                plaintext[++count]=papyrus[row][col];
+            }
+            else{
+                plaintext[count]=papyrus[row][col];
+            }
             count++;
         }
+    }
+    if(hashtable[count]!='0') {
+        plaintext[count]=hashtable[count];
+        count++;
     }
     plaintext[count]='\0';
     return plaintext;
@@ -247,6 +282,7 @@ char* scytale_decr(char* ciphertext,int diameter){
 char* rail_fence_encr(char* plaintext,int rails){
     char* ciphertext, *truetext;
     int count=0,length=0,temp=0,col=0,row=0,bottom=0;
+    init_hashtable();
     while(plaintext[count]!='\n'){
         if((plaintext[count]>='A'&&plaintext[count]<='Z')||(plaintext[count]>='a')&&(plaintext[count]<='z')){
             length++;
@@ -266,6 +302,9 @@ char* rail_fence_encr(char* plaintext,int rails){
         if((plaintext[count]>='A'&&plaintext[count]<='Z')||(plaintext[count]>='a')&&(plaintext[count]<='z')){
             truetext[temp]=plaintext[count];
             temp++;
+        }
+        else{
+            hashtable[count]=plaintext[count];
         }
         count++;
     }
@@ -297,13 +336,19 @@ char* rail_fence_encr(char* plaintext,int rails){
 
 char* rail_fence_decr(char* ciphertext){
     char* plaintext,*truetext;
-    int count=0,rails=0,length=0,col,row,temp,bottom=0;
+    int count=0,rails=0,length=0,col,row,temp,bottom=0,extrachars=0;
     while(ciphertext[count]!='\0'){
         if(ciphertext[count]==' ') rails++;
         count++;
     }
+    for(length=0;length<HASH_SIZE;length++){
+        if(hashtable[length]!='0') {
+            printf("%c at %d\n",hashtable[length],length);
+            extrachars++;
+        }
+    }
     length=count-rails;
-    plaintext=(char*)malloc((length)*sizeof(char));
+    plaintext=(char*)malloc((length+extrachars)*sizeof(char));
     truetext=(char*)malloc((length)*sizeof(char));
     char rail_fence[rails][length];
     for(row=0;row<rails;row++){
@@ -338,13 +383,31 @@ char* rail_fence_decr(char* ciphertext){
     temp=0;
     bottom=0;
     for(count=0;count<length;count++){
-        plaintext[count]=rail_fence[temp][count];
+        truetext[count]=rail_fence[temp][count];
         if(temp==rails-1) bottom=1;
         else if(!temp) bottom=0;
         if(!bottom) temp++;
         else temp--;
     }
-    plaintext[length]='\0';
+    truetext[count]='\0';
+    count=0;
+    temp=0;
+    while(truetext[temp]!='\0'){
+        if(hashtable[count]!='0'){
+            plaintext[count]=hashtable[count];
+            plaintext[++count] = truetext[temp];
+        }
+        else{
+            plaintext[count]=truetext[temp];
+        }
+        count++;
+        temp++;
+    }
+    if(hashtable[count]!='0') {
+        plaintext[count]=hashtable[count];
+        count++;
+    }
+    plaintext[count]='\0';
     return plaintext;
 }
 
@@ -371,9 +434,9 @@ int main(){
     printf("Ciphertext for Affine Cipher is: %s\n",ciphertext);
     decipheredtext=affine_decr(ciphertext);
     printf("Plaintext for Affine Cipher is: %s\n",decipheredtext);
-    //End of Affine Cipher
+    //End of Affine Cipher*/
 
-    //Start of Decryptor
+    /*//Start of Decryptor
     decipheredtext=decryptor(ciphertext);
     printf("Plaintext for Decryptor is: %s\n",decipheredtext);
     //End of Decryptor
