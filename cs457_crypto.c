@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "cs457_crypto.h"
 
 #define HASH_SIZE 256
@@ -129,63 +130,126 @@ char* affine_decr(char* ciphertext){
 }
 
 char* decryptor(char* ciphertext){
+    int count=0,length;
     char cipher,plain,word[30];
-    puts("Please enter the cipher letter and the letter you want to exchange!");
-    //scanf("%c %c",&cipher,&plain);
-    puts("Enter a semi decrypted word!");
-    fgets(word,sizeof(word),stdin);
-    printf("%s\n",word);
+    char* plaintext;
+    while(ciphertext[count]!='\n'){
+        count++;
+    }
+    length=count;
+    plaintext=(char*)malloc(length*sizeof(char));
+    for(count=0;count<length;count++){
+        if((ciphertext[count]>='A'&&ciphertext[count]<='Z')||(ciphertext[count]>='a')&&(ciphertext[count]<='z')){
+            plaintext[count]='*';
+        }
+        else{
+            plaintext[count]=ciphertext[count];
+        }
+    }
+    plaintext[count]='\0';
+    while(strcmp(plaintext,ciphertext)){
+        count=0;
+        puts("Please enter the cipher letter and the letter you want to exchange!");
+        scanf(" %c",&cipher);
+        scanf(" %c",&plain);
+        printf("Next mapping: %c -> %c\n",plain,cipher);
+        while(ciphertext[count]!='\n'){
+            if(ciphertext[count]==cipher){
+                ciphertext[count]=plain;
+                plaintext[count]=plain;
+            }
+            else if(ciphertext[count]==toupper(cipher)){
+                ciphertext[count]=toupper(plain);
+                plaintext[count]=toupper(plain);
+            }
+            count++;
+        }
+        printf("%s\n",plaintext);
+        printf("Enter partially decrypted word: ");
+        scanf(" %s",word);
+    }
+    
+    
+    return plaintext;
 }
 
 char* trithemius_encr(char* plaintext){
-    char* ciphertext;
-    int count=0,col=0;
+    char* ciphertext, *truetext;
+    int count=0,col=0,length=0,temp;
+    init_hashtable();
     while(plaintext[count]!='\n'){
+        if((plaintext[count]>='A'&&plaintext[count]<='Z')||(plaintext[count]>='a')&&(plaintext[count]<='z')){
+            length++;
+        }
         count++;
     }
-    ciphertext = (char*)malloc(count*sizeof(char));
+    ciphertext = (char*)malloc(length*sizeof(char));
+    truetext = (char*)malloc(length*sizeof(char));
     count=0;
+    temp=0;
     while(plaintext[count]!='\n'){
-        if((plaintext[count]>='A')&&(plaintext[count]<='Z')){
-            col = plaintext[count] - 'A';
-            ciphertext[count]=tabula_recta_upper[count][col];
-        }
-        else if((plaintext[count]>='a')&&(plaintext[count]<='z')){
-            col = plaintext[count] - 'a';
-            ciphertext[count]=tabula_recta_lower[count][col];
+        if((plaintext[count]>='A'&&plaintext[count]<='Z')||(plaintext[count]>='a')&&(plaintext[count]<='z')){
+            truetext[temp]=plaintext[count];
+            temp++;
         }
         else{
-            ciphertext[count]=plaintext[count];
+            hashtable[count]=plaintext[count];
         }
         count++;
     }
+    truetext[length]='\0';
+    count=0;
+    while(truetext[count]!='\0'){
+        if((truetext[count]>='A')&&(truetext[count]<='Z')){
+            col = truetext[count] - 'A';
+            ciphertext[count]=tabula_recta_upper[count][col];
+        }
+        else if((truetext[count]>='a')&&(truetext[count]<='z')){
+            col = truetext[count] - 'a';
+            ciphertext[count]=tabula_recta_lower[count][col];
+        }
+        count++;
+    }
+    free(truetext);
     ciphertext[count]='\0';
     return ciphertext;
 }
 
 char* trithemius_decr(char* ciphertext){
     char* plaintext;
-    int count=0,col=0;
+    int count=0,col=0,temp,extrachars=0;
     while(ciphertext[count]!='\0'){
         count++;
     }
-    plaintext = (char*)malloc(count*sizeof(char));
+    for(temp=0;temp<HASH_SIZE;temp++){
+        if(hashtable[temp]!='0') {
+            extrachars++;
+        }
+    }
+    plaintext = (char*)malloc((count+extrachars)*sizeof(char));
     count=0;
+    temp=0;
     while(ciphertext[count]!='\0'){
+        if(hashtable[temp]!='0'){
+            plaintext[temp]=hashtable[temp];
+            temp++;
+        }
         if((ciphertext[count]>='A')&&(ciphertext[count]<='Z')){
             col = ciphertext[count] - 'A';
-            plaintext[count]=tabula_recta_upper[count-count*1][col-count];
+            plaintext[temp]=tabula_recta_upper[count-count*1][absol(col-count)];
         }
         else if((ciphertext[count]>='a')&&(ciphertext[count]<='z')){
             col = ciphertext[count] - 'a';
-            plaintext[count]=tabula_recta_lower[count-count*1][absol(col-count)];
+            plaintext[temp]=tabula_recta_lower[count-count*1][absol(col-count)];
         }
-        else{
-            plaintext[count]=ciphertext[count];
-        }
+        temp++;
         count++;
     }
-    plaintext[count]='\0';
+    if(hashtable[temp]!='0') {
+        plaintext[temp]=hashtable[temp];
+        temp++;
+    }
+    plaintext[temp]='\0';
     return plaintext;
 }
 
@@ -232,6 +296,7 @@ char* scytale_encr(char* plaintext,int diameter){
             count++;
         }
     }
+    free(truetext);
     ciphertext[count]='\0';
     return ciphertext;
 }
@@ -330,6 +395,7 @@ char* rail_fence_encr(char* plaintext,int rails){
         ciphertext[count]=' ';
         count++;
     }
+    free(truetext);
     ciphertext[length+rails]='\0';
     return ciphertext;
 }
@@ -343,7 +409,6 @@ char* rail_fence_decr(char* ciphertext){
     }
     for(length=0;length<HASH_SIZE;length++){
         if(hashtable[length]!='0') {
-            printf("%c at %d\n",hashtable[length],length);
             extrachars++;
         }
     }
@@ -412,60 +477,77 @@ char* rail_fence_decr(char* ciphertext){
 }
 
 int main(){
-    char plaintext[256],key[256];
+    char *plaintext,key[256],line[256];
     char* ciphertext,*decipheredtext;
     int count=0,diameter,rails;
-    puts("Please enter the text you want to encrypt!");
-    fgets(plaintext,sizeof(plaintext),stdin);
-    /*//Start of One Time Pad
+    FILE *data;
+    data = fopen("demo.txt","r");
+    if (data==NULL){
+        printf("Error! Cannot access this file!\n");
+    }
+    //Start of One Time Pad
+    fgets(line,256,data);
+    plaintext=strdup(line);
+    printf("%s\n",plaintext);
     while(plaintext[count]!='\n'){
-        //use of /dev/urandom instead of rand
         key[count]=rand()%(126-32+1)+32; 
         count++;
     }
     ciphertext=one_time_pad_encr(plaintext,count,key);
     printf("Ciphertext for One Time Pad is: %s\n",ciphertext);
     decipheredtext=one_time_pad_decr(ciphertext,count,key);
-    printf("Plaintext for One Time Pad is: %s\n",decipheredtext);
+    printf("Plaintext for One Time Pad is: %s\n\n",decipheredtext);
     //End of One Time Pad
 
     //Start of Affine Cipher
+    fgets(line,256,data);
+    plaintext=strdup(line);
+    printf("%s\n",plaintext);
     ciphertext=affine_encr(plaintext);
     printf("Ciphertext for Affine Cipher is: %s\n",ciphertext);
     decipheredtext=affine_decr(ciphertext);
-    printf("Plaintext for Affine Cipher is: %s\n",decipheredtext);
-    //End of Affine Cipher*/
+    printf("Plaintext for Affine Cipher is: %s\n\n",decipheredtext);
+    //End of Affine Cipher
 
-    /*//Start of Decryptor
-    decipheredtext=decryptor(ciphertext);
+    /*//Start of Decryptor -> Uncomment to run
+    decipheredtext=decryptor(plaintext);
     printf("Plaintext for Decryptor is: %s\n",decipheredtext);
-    //End of Decryptor
+    //End of Decryptor*/
 
     //Start of Trithemius Cipher
+    fgets(line,256,data);
+    plaintext=strdup(line);
+    printf("%s\n",plaintext);
     init_tabula_recta_upper();
     init_tabula_recta_lower();
     ciphertext=trithemius_encr(plaintext);
     printf("Ciphertext for Trithemiys Cipher is: %s\n",ciphertext);
     decipheredtext=trithemius_decr(ciphertext);
-    printf("Plaintext for Trithemius Cipher is: %s\n",decipheredtext);
+    printf("Plaintext for Trithemius Cipher is: %s\n\n",decipheredtext);
     //End of Trithemius Cipher
 
     //Start of Scytale Cipher
-    puts("Please enter the cylinder diameter!");
-    scanf("%d",&diameter);
+    fgets(line,256,data);
+    plaintext=strtok(line,"-");
+    diameter=atoi(strtok(NULL,"-"));
+    printf("%s %d\n",plaintext,diameter);
     ciphertext=scytale_encr(plaintext,diameter);
     printf("Ciphertext for Scytale Cipher is: %s\n",ciphertext);
     decipheredtext=scytale_decr(ciphertext,diameter);
-    printf("Plaintext for Scytale Cipher is: %s\n",decipheredtext);
-    //End of Scytale Cipher*/
+    printf("Plaintext for Scytale Cipher is: %s\n\n",decipheredtext);
+    //End of Scytale Cipher
 
     //Start of Rail Fence Cipher
-    puts("Please enter the number of rails!");
-    scanf("%d",&rails);
+    fgets(line,256,data);
+    plaintext=strtok(line,"-");
+    rails=atoi(strtok(NULL,"-"));
+    printf("%s %d\n",plaintext,rails);
     ciphertext=rail_fence_encr(plaintext,rails);
     printf("Ciphertext for Rail Fence Cipher is: %s\n",ciphertext);
     decipheredtext=rail_fence_decr(ciphertext);
     printf("Plaintext for Rail Fence Cipher is: %s\n",decipheredtext);
     //End of Rail Fence Cipher
+    
+    fclose(data);
     return 0;
 }
