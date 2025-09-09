@@ -1,13 +1,30 @@
--one time pad works completely
+# Simple Encryption Algorithms
 
--affine encryption works completely
+## Author
+**Methodios Zacharioudakis**
 
--Decryptor works the character replacement but not the word recommendation
-I commented it out so it doesnt block program's other processes
-No input provided for decryptor in demo
+---
 
--trithemius encryption work completely
+### Overview
+This project simulates how some older **encryption algorithms** worked.  
+Specifically it includes:
+- one time pad 
+- affine encryption 
+- Decryptor with word recommendations
+- trithemius encryption 
+- scytale encryption
+- rail fence
+  
+*Input is given through a demo file*  
 
--scytale encryption works only with perfect divided text length with papyrus diameter 
+---
 
--rail fence encryption doesnt work with 24 character length texts  (?)
+**To compile:**
+```sh
+make all
+```
+
+**To clean compilation products:**
+```sh
+make clean
+```

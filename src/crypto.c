@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "cs457_crypto.h"
+#include "crypto.h"
 
 #define HASH_SIZE 256
 
